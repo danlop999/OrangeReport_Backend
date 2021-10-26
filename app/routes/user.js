@@ -3,12 +3,13 @@ const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
 
-const connection = mysql.createConnection({
+var db_config = {
   host: process.env.DB_HOSTNAME,
   user: process.env.DB_USER,
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
-});
+};
+var pool = mysql.createPool(db_config);
 
 const router = express.Router();
 //---------------------------------
@@ -48,37 +49,40 @@ router.post(
     const PW = req.body.PW;
     const errors = [];
 
-    connection.query(
-      "SELECT * FROM User_Tables WHERE UserName = ?",
-      [UserName],
-      (error, results) => {
-        if (error) {
-          errors.push("ユーザーネームエラー/UserName Error.");
-          console.log(error);
-        }
-        if (results.length === 0 || results.length > 1) {
-          errors.push("ユーザーネームエラー/UserName Error.");
-        }
-        if (errors.length > 0) {
-          res.json({ Error: errors });
-        } else {
-          const hash = results[0].PW;
-          bcrypt.compare(PW, hash, (error, isEqual) => {
-            if (isEqual) {
-              res.json({
-                UserId: results[0].UserId,
-                UserName: results[0].UserName,
-              });
-            } else {
-              res.json({ Error: "パスワードエラー/Password Error." });
-              if (error) {
-                console.log(error);
+    pool.getConnection(function (err, connection) {
+      connection.query(
+        "SELECT * FROM User_Tables WHERE UserName = ?",
+        [UserName],
+        (error, results) => {
+          if (error) {
+            errors.push("ユーザーネームエラー/UserName Error.");
+            console.log(error);
+          }
+          if (results.length === 0 || results.length > 1) {
+            errors.push("ユーザーネームエラー/UserName Error.");
+          }
+          if (errors.length > 0) {
+            res.json({ Error: errors });
+          } else {
+            const hash = results[0].PW;
+            bcrypt.compare(PW, hash, (error, isEqual) => {
+              if (isEqual) {
+                res.json({
+                  UserId: results[0].UserId,
+                  UserName: results[0].UserName,
+                });
+              } else {
+                res.json({ Error: "パスワードエラー/Password Error." });
+                if (error) {
+                  console.log(error);
+                }
               }
-            }
-          });
+            });
+          }
+          connection.release();
         }
-      }
-    );
+      );
+    });
   }
 );
 
@@ -115,24 +119,27 @@ router.post(
     const PW = req.body.PW;
     const errors = [];
 
-    connection.query(
-      "SELECT UserId FROM User_Tables WHERE UserName = ?;",
-      [UserName],
-      (error, results) => {
-        if (error) {
-          console.log(error);
-          errors.push("ユーザーネームエラー/UserName Error.");
+    pool.getConnection(function (err, connection) {
+      connection.query(
+        "SELECT UserId FROM User_Tables WHERE UserName = ?;",
+        [UserName],
+        (error, results) => {
+          if (error) {
+            console.log(error);
+            errors.push("ユーザーネームエラー/UserName Error.");
+          }
+          if (results.length > 0) {
+            errors.push("ユーザーネームエラー/UserName Error.");
+          }
+          if (errors.length > 0) {
+            res.json({ Error: errors });
+          } else {
+            next();
+          }
+          connection.release();
         }
-        if (results.length > 0) {
-          errors.push("ユーザーネームエラー/UserName Error.");
-        }
-        if (errors.length > 0) {
-          res.json({ Error: errors });
-        } else {
-          next();
-        }
-      }
-    );
+      );
+    });
   },
   (req, res) => {
     //INSERT
@@ -145,21 +152,24 @@ router.post(
         res.json({ Error: "パスワードエラー/Password Error." });
         console.log(error);
       } else {
-        connection.query(
-          "INSERT INTO User_Tables VALUES (null,?,?);",
-          [UserName, hash],
-          (error, results) => {
-            if (error) {
-              console.log(error);
-              res.json({ Error: "Error." });
-            } else {
-              res.json({
-                UserId: results.insertId,
-                UserName: UserName,
-              });
+        pool.getConnection(function (err, connection) {
+          connection.query(
+            "INSERT INTO User_Tables VALUES (null,?,?);",
+            [UserName, hash],
+            (error, results) => {
+              if (error) {
+                console.log(error);
+                res.json({ Error: "Error." });
+              } else {
+                res.json({
+                  UserId: results.insertId,
+                  UserName: UserName,
+                });
+              }
+              connection.release();
             }
-          }
-        );
+          );
+        });
       }
     });
   }
