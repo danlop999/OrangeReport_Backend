@@ -7,13 +7,6 @@ app.use(express.urlencoded({ extended: false }));
 // jsonを使えるようにする
 app.use(express.json());
 
-const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "OrangeReport",
-});
-
 // "app/route"を定数routerに読み込む
 const router = require("./routes/");
 //　outerを"/api/"アクセスのapiとして扱う
