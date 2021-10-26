@@ -2,6 +2,7 @@ const express = require("express");
 const session = require("express-session");
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
+require("dotenv").config();
 const app = express();
 
 app.use(express.urlencoded({ extended: false }));
@@ -29,7 +30,6 @@ app.use(function (req, res, next) {
   );
   next();
 });
-
 // 環境変数PORT || 3000　をポート番号に指定
 const port = process.env.PORT || 3000;
 

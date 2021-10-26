@@ -1,20 +1,28 @@
 const express = require("express");
 const mysql = require("mysql2");
+require("dotenv").config();
 
 const connection = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "",
-  database: "OrangeReport",
+  host: process.env.DB_HOSTNAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASS,
+  database: process.env.DB_NAME,
 });
 const router = express.Router();
+//---------------------------------
+//var AdminToken = "true"; //|
+//---------------------------------
 
-// GET  http://localhost:3000/api/v1/article/test
 router.get("/", (req, res) => {
   connection.query(
     "SELECT ArticlesId,Title,Summary,LimitedFlag FROM Articles_Tables;",
     (error, results) => {
-      res.json({ data: results });
+      if (error) {
+        console.log(error);
+        res.json({ Error: "Error" });
+      } else {
+        res.json({ results });
+      }
     }
   );
 });
@@ -25,7 +33,18 @@ router.get("/:ArticlesId", (req, res) => {
     "SELECT * FROM Articles_Tables WHERE ArticlesId = ?;",
     [ArticlesId],
     (error, results) => {
-      res.json({ data: results });
+      if (error) {
+        console.log(error);
+        res.json({ Error: "Error" });
+      } else {
+        res.json({
+          ArticlesId: results[0].ArticlesId,
+          Title: results[0].Title,
+          Summary: results[0].Summary,
+          Content: results[0].Content,
+          LimitedFlag: results[0].LimitedFlag,
+        });
+      }
     }
   );
 });

@@ -1,6 +1,7 @@
 const express = require("express");
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
+require("dotenv").config();
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -10,22 +11,32 @@ const connection = mysql.createConnection({
 });
 
 const router = express.Router();
+//---------------------------------
+//var AdminToken = "true"; //|
+//---------------------------------
 
 router.post(
   "/SELECT",
   (req, res, next) => {
     //空値バリデーション
-    const AdminPW = process.env.AdminToken;
+    const AdminToken = req.body.AdminToken;
     const UserName = req.body.UserName;
     const PW = req.body.PW;
     const errors = [];
-    if (AdminPW !== process.env.AdminToken || 1 !== 1) {
-      errors.push("不正なリクエストです/Unauthorized request.");
-    } else if (UserName === "" || UserName === null) {
+
+    bcrypt.compare(AdminToken, process.env.AdminToken, (error, isEqual) => {
+      if (error) {
+        errors.push("不正なリクエストです/Unauthorized request.");
+      } else if (isEqual) {
+      }
+    });
+    if (UserName === "" || UserName === null) {
       errors.push("ユーザーネームエラー/UserName Error.");
-    } else if (PW === "" || PW === null) {
+    }
+    if (PW === "" || PW === null) {
       errors.push("パスワードエラー/Password Error.");
-    } else if (errors.length > 0) {
+    }
+    if (errors.length > 0) {
       res.json({ errors: errors });
     } else {
       next();
@@ -36,15 +47,19 @@ router.post(
     const UserName = req.body.UserName;
     const PW = req.body.PW;
     const errors = [];
+
     connection.query(
-      "SELECT * FROM User_Tables WHERE UserName = ?;",
+      "SELECT * FROM User_Tables WHERE UserName = ?",
       [UserName],
       (error, results) => {
         if (error) {
           errors.push("ユーザーネームエラー/UserName Error.");
-        } else if (results[1] !== null) {
+          console.log(error);
+        }
+        if (results.length === 0 || results.length > 1) {
           errors.push("ユーザーネームエラー/UserName Error.");
-        } else if (errors.length > 0) {
+        }
+        if (errors.length > 0) {
           res.json({ Error: errors });
         } else {
           const hash = results[0].PW;
@@ -56,6 +71,9 @@ router.post(
               });
             } else {
               res.json({ Error: "パスワードエラー/Password Error." });
+              if (error) {
+                console.log(error);
+              }
             }
           });
         }
@@ -68,17 +86,24 @@ router.post(
   "/INSERT",
   (req, res, next) => {
     //空値バリデーション
-    const AdminPW = process.env.AdminToken;
+    const AdminToken = req.body.AdminToken;
     const UserName = req.body.UserName;
     const PW = req.body.PW;
     const errors = [];
-    if (AdminPW !== process.env.AdminToken || 1 !== 1) {
-      errors.push("不正なリクエストです/Unauthorized request.");
-    } else if (UserName === "" || UserName === null) {
-      errors.push("1ユーザーネームエラー/UserName Error.");
-    } else if (PW === "" || PW === null) {
+
+    bcrypt.compare(AdminToken, process.env.AdminToken, (error, isEqual) => {
+      if (error) {
+        errors.push("不正なリクエストです/Unauthorized request.");
+      } else if (isEqual) {
+      }
+    });
+    if (UserName === "" || UserName === null) {
+      errors.push("ユーザーネームエラー/UserName Error.");
+    }
+    if (PW === "" || PW === null) {
       errors.push("パスワードエラー/Password Error.");
-    } else if (errors.length > 0) {
+    }
+    if (errors.length > 0) {
       res.json({ errors: errors });
     } else {
       next();
@@ -89,16 +114,19 @@ router.post(
     const UserName = req.body.UserName;
     const PW = req.body.PW;
     const errors = [];
+
     connection.query(
       "SELECT UserId FROM User_Tables WHERE UserName = ?;",
       [UserName],
       (error, results) => {
         if (error) {
-          errors.push("2ユーザーネームエラー/UserName Error.");
           console.log(error);
-        } else if (results[1] !== null) {
-          errors.push("3ユーザーネームエラー/UserName Error.");
-        } else if (errors.length > 0) {
+          errors.push("ユーザーネームエラー/UserName Error.");
+        }
+        if (results.length > 0) {
+          errors.push("ユーザーネームエラー/UserName Error.");
+        }
+        if (errors.length > 0) {
           res.json({ Error: errors });
         } else {
           next();
@@ -107,13 +135,14 @@ router.post(
     );
   },
   (req, res) => {
-    //NSERT
+    //INSERT
     const UserName = req.body.UserName;
     const PW = req.body.PW;
     const errors = [];
+
     bcrypt.hash(PW, 10, (error, hash) => {
       if (error) {
-        res.json({ Error: "1パスワードエラー/Password Error." });
+        res.json({ Error: "パスワードエラー/Password Error." });
         console.log(error);
       } else {
         connection.query(
@@ -125,8 +154,8 @@ router.post(
               res.json({ Error: "Error." });
             } else {
               res.json({
-                UserId: results[0].UserId,
-                UserName: results[0].UserName,
+                UserId: results.insertId,
+                UserName: UserName,
               });
             }
           }
