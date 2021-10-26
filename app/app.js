@@ -13,6 +13,11 @@ const connection = mysql.createConnection({
   database: 'Progate_Node_Lesson_blog'
 });
 
+const port = process.env.PORT || 3000; // port番号を指定
+
+const router = require('./routes/');
+app.use('/api/', router);
+
 app.use(
   session({
     secret: 'my_secret_key',
@@ -87,5 +92,5 @@ app.get('/logout', (req, res) => {
   });
 });
 
-app.listen(3000);
-
+app.listen(port);
+console.log('listen on port ' + port);
