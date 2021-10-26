@@ -21,6 +21,10 @@ app.use(function (req, res, next) {
   );
   next();
 });
+process.on("uncaughtException", (err) => {
+  console.log(err);
+  res.json({ Error: "Error" });
+});
 // 環境変数PORT || 3000　をポート番号に指定
 const port = process.env.PORT || 3000;
 

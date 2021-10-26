@@ -14,28 +14,27 @@ const router = express.Router();
 //---------------------------------
 
 router.get("/", (req, res) => {
+  const errors = [];
   connection.query(
     "SELECT ArticlesId,Title,Summary,LimitedFlag FROM Articles_Tables;",
     (error, results) => {
-      if (error) {
-        console.log(error);
-        res.json({ Error: "Error" });
-      } else {
-        res.json({ results });
-      }
+      res.json({ results });
     }
   );
 });
 
 router.get("/:ArticlesId", (req, res) => {
   const ArticlesId = req.params.ArticlesId;
+  const errors = [];
   connection.query(
     "SELECT * FROM Articles_Tables WHERE ArticlesId = ?;",
     [ArticlesId],
     (error, results) => {
-      if (error) {
-        console.log(error);
-        res.json({ Error: "Error" });
+      if (error || results.length == 0) {
+        errors.push("ArticlesIdエラー/ArticlesId Error.");
+      }
+      if (errors.length > 0) {
+        res.json({ Error: errors });
       } else {
         res.json({
           ArticlesId: results[0].ArticlesId,
