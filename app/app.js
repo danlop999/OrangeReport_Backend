@@ -1,96 +1,38 @@
-const express = require('express');
-const mysql = require('mysql2');
-const session = require('express-session');
+const express = require("express");
+const session = require("express-session");
+const mysql = require("mysql2");
+const bcrypt = require("bcrypt");
 const app = express();
 
-app.use(express.static('public'));
-app.use(express.urlencoded({extended: false}));
+app.use(express.urlencoded({ extended: false }));
+// jsonを使えるようにする
+app.use(express.json());
 
 const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'root',
-  password: 'root',
-  database: 'Progate_Node_Lesson_blog'
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "OrangeReport",
 });
 
-const port = process.env.PORT || 3000; // port番号を指定
+// "app/route"を定数routerに読み込む
+const router = require("./routes/");
+//　outerを"/api/"アクセスのapiとして扱う
+app.use("/api/", router);
 
-const router = require('./routes/');
-app.use('/api/', router);
-
-app.use(
-  session({
-    secret: 'my_secret_key',
-    resave: false,
-    saveUninitialized: false,
-  })
-);
-
-app.use((req, res, next) => {
-  if (req.session.userId === undefined) {
-    res.locals.username = 'ゲスト';
-    res.locals.isLoggedIn = false;
-  } else {
-    res.locals.username = req.session.username;
-    res.locals.isLoggedIn = true;
-  }
+// CORS設定。異なるURLからでも呼び出せるようにする
+app.use(function (req, res, next) {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
   next();
 });
 
-app.get('/', (req, res) => {
-  res.render('top.ejs');
-});
+// 環境変数PORT || 3000　をポート番号に指定
+const port = process.env.PORT || 3000;
 
-app.get('/list', (req, res) => {
-  connection.query(
-    'SELECT * FROM articles',
-    (error, results) => {
-      res.render('list.ejs', { articles: results });
-    }
-  );
-});
-
-app.get('/article/:id', (req, res) => {
-  const id = req.params.id;
-  connection.query(
-    'SELECT * FROM articles WHERE id = ?',
-    [id],
-    (error, results) => {
-      res.render('article.ejs', { article: results[0] });
-    }
-  );
-});
-
-app.get('/login', (req, res) => {
-  res.render('login.ejs');
-});
-
-app.post('/login', (req, res) => {
-  const email = req.body.email;
-  connection.query(
-    'SELECT * FROM users WHERE email = ?',
-    [email],
-    (error, results) => {
-      if (results.length > 0) {
-        if (req.body.password === results[0].password){
-          req.session.userId = results[0].id;
-          req.session.username = results[0].username;
-          res.redirect('/list');
-        } else {
-          res.redirect('/login');
-        }    
-      } else {
-        res.redirect('/login');
-      }
-    }
-  );
-});
-
-app.get('/logout', (req, res) => {
-  req.session.destroy((error)  => {
-    res.redirect('/list');
-  });
-});
-
+//サーバ起動
 app.listen(port);
-console.log('listen on port ' + port);
+console.log("listen on port " + port);
