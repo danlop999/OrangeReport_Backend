@@ -1,7 +1,5 @@
 const express = require("express");
-const session = require("express-session");
 const mysql = require("mysql2");
-const bcrypt = require("bcrypt");
 require("dotenv").config();
 const app = express();
 
