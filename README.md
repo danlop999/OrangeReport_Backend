@@ -1,6 +1,6 @@
 ## npmでインストール
 
-<code>npm install --save express express-session ejs mysql2</code><br>
+<code>npm install --save express express-session ejs mysql2 bcrypt</code><br>
 
 
 ## Expressコマンドでひな形生成を行う方法
@@ -12,6 +12,9 @@
 ## sqlファイル読み込みによるクエリー実行
 * <a href="https://dev.mysql.com/doc/refman/5.6/ja/mysql-batch-commands.html">4.5.1.5 テキストファイルから SQL ステートメントを実行する</a><br>
 
+
+## WebAPI実装の参考ページ
+*<a href="https://qiita.com/ngmr_mo/items/73cc7160d002a4989416">サルでも分かるExpressでのjsonAPIサーバーの作り方</a><br>
 
 ## 注意点
 <code>const mysql = require('mysql');</code> => <code>const mysql = require('mysql2');</code><br>
