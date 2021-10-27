@@ -53,6 +53,7 @@ router.get("/:ArticlesId", (req, res) => {
             Title: results[0].Title,
             Summary: results[0].Summary,
             Content: results[0].Content,
+            LimitedFlag: results[0].LimitedFlag,
           });
         }
         connection.release();
