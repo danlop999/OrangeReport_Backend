@@ -25,6 +25,7 @@ router.get("/", (req, res) => {
       "SELECT ArticlesId,Title,Summary,LimitedFlag FROM Articles_Tables;",
       (error, results) => {
         //console.log(res.json(results));
+        res.header("Content-Type", "text/plain;charset=utf-8");
         res.json(results);
         connection.release();
       }
