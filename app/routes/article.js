@@ -42,13 +42,18 @@ router.get("/:ArticlesId", (req, res) => {
       "SELECT * FROM Articles_Tables WHERE ArticlesId = ?;",
       [ArticlesId],
       (error, results) => {
-        if (error || results.length == 0) {
+        if (error || results.length > 1 || results.length < 1) {
           errors.push("ArticlesIdエラー/ArticlesId Error.");
         }
         if (errors.length > 0) {
           res.json({ Error: errors });
         } else {
-          res.json(results);
+          res.json({
+            ArticlesId: results[0].ArticlesId,
+            Title: results[0].Title,
+            Summary: results[0].Summary,
+            Content: results[0].Content,
+          });
         }
         connection.release();
       }
